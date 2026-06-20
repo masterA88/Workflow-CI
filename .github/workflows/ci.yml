@@ -55,10 +55,14 @@ jobs:
       - name: Build Docker image from MLflow model
         if: env.HAS_DOCKER_TOKEN == 'true'
         working-directory: MLProject
+        # Use the conda env-manager so the image is built from conda.yaml
+        # (Python 3.12.7), avoiding the default virtualenv path that bootstraps
+        # pip for Python 3.9 via get-pip.py (which no longer supports 3.9).
         run: |
           mlflow models build-docker \
             --model-uri "runs:/$RUN_ID/model" \
-            --name "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model"
+            --name "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model" \
+            --env-manager conda
 
       - name: Push Docker image to Docker Hub
         if: env.HAS_DOCKER_TOKEN == 'true'
