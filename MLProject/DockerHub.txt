@@ -1,8 +1,8 @@
 Docker Hub Image - Kriteria 3 Advanced
 ======================================
 
-Image : https://hub.docker.com/r/masterA88/telco-churn-model
-Pull   : docker pull masterA88/telco-churn-model:latest
+Image : https://hub.docker.com/r/master88888/telco-churn-model
+Pull   : docker pull master88888/telco-churn-model:latest
 
 Image dibangun otomatis oleh GitHub Actions (.github/workflows/ci.yml) dengan
 perintah `mlflow models build-docker` dari model hasil pelatihan MLflow Project,
@@ -10,5 +10,5 @@ lalu di-push ke Docker Hub menggunakan kredensial pada GitHub Secrets
 (DOCKER_HUB_USERNAME, DOCKER_HUB_TOKEN).
 
 Menjalankan model yang sudah di-serve dari image:
-    docker run -p 5005:8080 masterA88/telco-churn-model:latest
+    docker run -p 5005:8080 master88888/telco-churn-model:latest
     # endpoint: http://127.0.0.1:5005/invocations
