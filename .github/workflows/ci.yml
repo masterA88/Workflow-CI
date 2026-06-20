@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MLFLOW_TRACKING_URI: file:./mlruns
+      HAS_DOCKER_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN != '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,14 +46,14 @@ jobs:
       # These steps run only when the Docker Hub token secret is configured, so
       # the CI is green (train + artifact) even before the secret is added.
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKER_HUB_TOKEN != '' }}
+        if: env.HAS_DOCKER_TOKEN == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build Docker image from MLflow model
-        if: ${{ secrets.DOCKER_HUB_TOKEN != '' }}
+        if: env.HAS_DOCKER_TOKEN == 'true'
         working-directory: MLProject
         run: |
           mlflow models build-docker \
@@ -60,7 +61,7 @@ jobs:
             --name "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model"
 
       - name: Push Docker image to Docker Hub
-        if: ${{ secrets.DOCKER_HUB_TOKEN != '' }}
+        if: env.HAS_DOCKER_TOKEN == 'true'
         run: |
           docker tag "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model" "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model:latest"
           docker push "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model:latest"
