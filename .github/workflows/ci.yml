@@ -52,17 +52,23 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      # Upgrade mlflow for the build step only: mlflow 2.19's docker base image
+      # is ubuntu:20.04 (can't install modern Python/pip), and the conda
+      # env-manager hits Anaconda's new Terms-of-Service gate. A current mlflow
+      # uses a working base image + virtualenv, so build-docker succeeds. The
+      # model itself is still trained/served with mlflow 2.19.
+      - name: Upgrade mlflow for docker build
+        if: env.HAS_DOCKER_TOKEN == 'true'
+        run: pip install --upgrade "mlflow>=3.1"
+
       - name: Build Docker image from MLflow model
         if: env.HAS_DOCKER_TOKEN == 'true'
         working-directory: MLProject
-        # Use the conda env-manager so the image is built from conda.yaml
-        # (Python 3.12.7), avoiding the default virtualenv path that bootstraps
-        # pip for Python 3.9 via get-pip.py (which no longer supports 3.9).
         run: |
           mlflow models build-docker \
             --model-uri "runs:/$RUN_ID/model" \
             --name "${{ secrets.DOCKER_HUB_USERNAME }}/telco-churn-model" \
-            --env-manager conda
+            --env-manager virtualenv
 
       - name: Push Docker image to Docker Hub
         if: env.HAS_DOCKER_TOKEN == 'true'
