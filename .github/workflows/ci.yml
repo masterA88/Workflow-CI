@@ -15,6 +15,9 @@ jobs:
     env:
       MLFLOW_TRACKING_URI: file:./mlruns
       HAS_DOCKER_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN != '' }}
+      # mlflow 3.x (used for the docker build step) gates the file store unless
+      # this opt-out is set.
+      MLFLOW_ALLOW_FILE_STORE: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
