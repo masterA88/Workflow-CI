@@ -37,7 +37,29 @@ def main():
 
     X_train, X_test, y_train, y_test = load_split(DATA_DIR)
 
-    mlflow.sklearn.autolog()
+    # Autolog params/metrics but log the model ourselves with an explicit conda
+    # env so the image built by `mlflow models build-docker --env-manager conda`
+    # uses conda-forge + nodefaults (avoids the Anaconda defaults-channel ToS
+    # gate that breaks the build on CI runners).
+    mlflow.sklearn.autolog(log_models=False)
+
+    conda_env = {
+        "name": "telco_churn_env",
+        "channels": ["conda-forge", "nodefaults"],
+        "dependencies": [
+            "python=3.12.7",
+            "pip",
+            {
+                "pip": [
+                    "mlflow==2.19.0",
+                    "scikit-learn==1.5.2",
+                    "pandas==2.3.3",
+                    "numpy==2.4.6",
+                    "cloudpickle==3.1.2",
+                ]
+            },
+        ],
+    }
 
     # When executed via `mlflow run`, MLflow has already created the run and
     # exposes it through MLFLOW_RUN_ID; calling start_run() then resumes it.
@@ -59,6 +81,9 @@ def main():
         mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred))
         mlflow.log_metric("test_f1", f1_score(y_test, y_pred))
         mlflow.log_metric("test_roc_auc", roc_auc_score(y_test, y_proba))
+
+        # Log the model with the explicit conda env (conda-forge/nodefaults).
+        mlflow.sklearn.log_model(model, artifact_path="model", conda_env=conda_env)
 
         # Persist the run id so the next CI step can locate the logged model.
         with open("run_id.txt", "w") as f:
